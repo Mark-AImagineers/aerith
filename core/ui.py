@@ -4,9 +4,12 @@ from textual.app import App, ComposeResult
 from textual.widgets import Static, Input
 from textual.containers import Container
 from utils.version import VersionManager
+from utils.terminal import TerminalManager
 from commands import system
 
 ver = VersionManager()
+ter = TerminalManager()
+
 COMMANDS = {
     **system.CMDS,
 }
@@ -33,8 +36,8 @@ class BootScreen(App):
             f"[green]Aerith v{ver.version} online. ",
             "[green]Stable... ",
             "",
-            "[bold green]Aerith: Welcome back, Mark.",
-            "[green]Aerith: What are we doing today?"
+            f"[bold green]Aerith: Mark, {ter.get_voiceline("greetings")}",
+            f"[green]Aerith: {ter.get_voiceline("command")}"
         ]
         self.current_line = 0
         self.current_char = 0

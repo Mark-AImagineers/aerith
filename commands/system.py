@@ -1,7 +1,12 @@
 import json
-from pathlib import Path
 import asyncio
+import sys
+import os
+import subprocess
+from pathlib import Path
+from utils.terminal import TerminalManager
 
+ter = TerminalManager()
 
 async def update_version(say, new_version="0.0.1"):
     await say("Loading version.json...")
@@ -27,7 +32,18 @@ async def update_version(say, new_version="0.0.1"):
         await say(f"Error writing version.json: {str(e)}")
         return "Failed."
 
-    return f"Version updated to {new_version}"
+    await say(f"Version updated to {new_version}")
+    return ter.get_voiceline("command")
+
+async def restart(say):
+    await say("Ok. Restarting System")
+
+    python = sys.executable
+    root = os.path.dirname(os.path.dirname(__file__))
+    main_script = os.path.join(root, "aerith.py")
+
+    subprocess.Popen([python, main_script, "start"])
+    sys.exit(0)
 
 def cls():
     return "__clear__"
@@ -36,5 +52,7 @@ CMDS = {
     "cls": cls,
     "clear": cls,
     "update version": update_version,
-    "update_version": update_version
+    "update_version": update_version,
+    "reset": restart,
+    "restart": restart
 }
