@@ -1,17 +1,21 @@
 import typer
+from typing_extensions import Annotated
+from utils.logging import AerithLogger
 
-app = typer.Typer()
+logger = AerithLogger(timestamp=False)
 
-@app.command()
-def start():
-    from utils.logging import AerithLogger
-    from utils.version import VersionManager
+def main(
+        command: Annotated[str, typer.Argument(help="Arg: start, hello")],
+):
+    if command == "start":
+        logger.log("Starting Application")
+        from core.ui import BootScreen
+        BootScreen().run()
 
-    log = AerithLogger()
-    version = VersionManager()
-
-    log.log("Boot sequence started...")
-    log.log(f"Running in {version.environment} mode.")
+    elif command == "exit":
+        logger.log("Goodbye...")
+    else:
+        logger.warn("syntax error. only use lower case")
 
 if __name__ == "__main__":
-    app()
+    typer.run(main)
