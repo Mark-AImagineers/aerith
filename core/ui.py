@@ -1,4 +1,5 @@
 import random
+import asyncio
 from textual.app import App, ComposeResult
 from textual.widgets import Static, Input
 from textual.containers import Container
@@ -73,7 +74,7 @@ class BootScreen(App):
     #----------------------------------#
     # Commands                         #
     #----------------------------------#
-    def on_input_submitted(self, event: Input.Submitted) -> None:
+    async def on_input_submitted(self, event: Input.Submitted) -> None:
         msg_box = self.query_one("#boot-msg", Static)
         user_input = event.value.strip().lower()
 
@@ -82,24 +83,27 @@ class BootScreen(App):
         key = " ".join(parts[:2]) if len(parts) >= 2 else parts[0]
         args = parts[2:] if len(parts) >= 2 else parts[1:]
 
-        def say(message: str):
-            msg_box.update(msg_box.renderable + f"\n[green]Aerith: {message}")
+        async def say(message: str):
+            msg_box.update(msg_box.renderable + "\n")
+            for char in message:
+                msg_box.update(msg_box.renderable + char)
+                await asyncio.sleep(0.02)
 
         try:
             if key in COMMANDS:
-                result = COMMANDS[key](say, *args)
+                result = await COMMANDS[key](say, *args)
 
                 if result == "__clear__":
                     msg_box.update("")
                 elif result:
-                    msg_box.update(msg_box.renderable + f"\n[green]Aerith: {result}")
+                    await say(result)
             else:
-                msg_box.update(msg_box.renderable + f"\n[green]Aerith: Unknown command '{key}'")
+                await say(f"Unknown command '{key}'")
 
         except AttributeError:
-            msg_box.update(msg_box.renderable + f"\n[green]Aerith: Command '{key}' found, but is not callable.")
+            await say(f"Command '{key}' found, but is not callable.")
 
         except Exception as e:
-            msg_box.update(msg_box.renderable + f"\n[red]Aerith: Error while executing '{key}': {str(e)}")
+            await say(f"Error while executing '{key}': {str(e)}")
 
         event.input.value = ""

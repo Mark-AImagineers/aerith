@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
+import asyncio
 
-def update_version(say, new_version="0.0.1"):
-    say("Loading version.json...")
+
+async def update_version(say, new_version="0.0.1"):
+    await say("Loading version.json...")
 
     path = Path(__file__).resolve().parent.parent / "version.json"
 
@@ -13,8 +15,8 @@ def update_version(say, new_version="0.0.1"):
         say(f"Error reading version.json: {str(e)}")
         return "Aborted."
 
-    say(f"Current version is: {data.get('version')}")
-    say(f"Updating version to {new_version}...")
+    await say(f"Current version is: {data.get('version')}")
+    await say(f"Updating version to {new_version}...")
 
     data["version"] = new_version
 
@@ -22,7 +24,7 @@ def update_version(say, new_version="0.0.1"):
         with open(path, "w") as f:
             json.dump(data, f, indent=4)
     except Exception as e:
-        say(f"Error writing version.json: {str(e)}")
+        await say(f"Error writing version.json: {str(e)}")
         return "Failed."
 
     return f"Version updated to {new_version}"
