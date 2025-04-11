@@ -1,0 +1,7 @@
+{
+    "service": "aerith",
+    "version": "0.1.0",
+    "build": "2025-04-11",
+    "commit": "placeholder_commit_hash",
+    "environment": "development"
+}
