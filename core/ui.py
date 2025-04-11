@@ -1,14 +1,13 @@
 import random
-import importlib
 from textual.app import App, ComposeResult
 from textual.widgets import Static, Input
 from textual.containers import Container
 from utils.version import VersionManager
-from commands import core
+from commands import system
 
 ver = VersionManager()
 COMMANDS = {
-    **core.CMDS,
+    **system.CMDS,
 }
 
 class BootScreen(App):
@@ -67,33 +66,40 @@ class BootScreen(App):
 
                 self.set_focus(input_box)
                 pass
-    
+    def say(self, message):
+        msg_box = self.query_one("#boot-msg", Static)
+        msg_box.update(msg_box.renderable + f"\n[green]Aerith: {message}")
+
     #----------------------------------#
     # Commands                         #
     #----------------------------------#
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        key = event.value.strip().lower()
         msg_box = self.query_one("#boot-msg", Static)
-        output = ""
+        user_input = event.value.strip().lower()
+
+        # Split input into words
+        parts = user_input.split()
+        key = " ".join(parts[:2]) if len(parts) >= 2 else parts[0]
+        args = parts[2:] if len(parts) >= 2 else parts[1:]
+
+        def say(message: str):
+            msg_box.update(msg_box.renderable + f"\n[green]Aerith: {message}")
 
         try:
             if key in COMMANDS:
-                result = COMMANDS[key]()
+                result = COMMANDS[key](say, *args)
 
                 if result == "__clear__":
                     msg_box.update("")
-                    event.input.value = ""
-                    return
-                else:
-                    output = f"[green]Aerith: {result}"
+                elif result:
+                    msg_box.update(msg_box.renderable + f"\n[green]Aerith: {result}")
             else:
-                output = f"[green]Aerith: Unknown command '{key}'"
+                msg_box.update(msg_box.renderable + f"\n[green]Aerith: Unknown command '{key}'")
 
         except AttributeError:
-            output = f"[green]Aerith: Command '{key}' found, but is not callable."
+            msg_box.update(msg_box.renderable + f"\n[green]Aerith: Command '{key}' found, but is not callable.")
 
         except Exception as e:
-            output = f"[red]Aerith: Error while executing '{key}': {str(e)}"
+            msg_box.update(msg_box.renderable + f"\n[red]Aerith: Error while executing '{key}': {str(e)}")
 
-        msg_box.update(msg_box.renderable + f"\n{output}")
         event.input.value = ""
