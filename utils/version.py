@@ -2,8 +2,10 @@ import json
 from pathlib import Path
 
 class VersionManager:
-    def __init__(self):
-        self._path = Path(__file__).resolve().parent.parent.parent / "version.json"
+    def __init__(self, path=None):
+        if path is None:
+            path = Path.cwd() / "version.json"
+        self._path = path
         self._data = self._load()
 
     def _load(self):
