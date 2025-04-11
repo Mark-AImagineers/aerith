@@ -1,10 +1,15 @@
 import random
+import importlib
 from textual.app import App, ComposeResult
-from textual.widgets import Static
+from textual.widgets import Static, Input
 from textual.containers import Container
 from utils.version import VersionManager
+from commands import core
 
 ver = VersionManager()
+COMMANDS = {
+    **core.CMDS,
+}
 
 class BootScreen(App):
     CSS_PATH = None
@@ -25,11 +30,11 @@ class BootScreen(App):
             f"[green]Active runtime: {ver.environment}",
             "[green]Establishing link...",
             "[green]Sync Protocol Established ",
-            "[green]All systems Online. ",
+            f"[green]Aerith v{ver.version} online. ",
             "[green]Stable... ",
             "",
-            "[bold green]Welcome back, Mark.",
-            "[green]What are we doing today?"
+            "[bold green]Aerith: Welcome back, Mark.",
+            "[green]Aerith: What are we doing today?"
         ]
         self.current_line = 0
         self.current_char = 0
@@ -37,7 +42,7 @@ class BootScreen(App):
         self._schedule_next_step()
 
     def _schedule_next_step(self):
-        delay = random.uniform(0.01, 0.09)
+        delay = random.uniform(0.01, 0.03)
         self.set_timer(delay, self._type)
 
     def _type(self):
@@ -54,5 +59,41 @@ class BootScreen(App):
                 self.current_char = 0
                 self._schedule_next_step()
         else:
-            # Done typing, no need to schedule more
-            pass
+                input_box = Input(placeholder="", id="input")
+                response_box = Static("", id="response")
+
+                self.mount(input_box)
+                self.mount(response_box)
+
+                self.set_focus(input_box)
+                pass
+    
+    #----------------------------------#
+    # Commands                         #
+    #----------------------------------#
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        key = event.value.strip().lower()
+        msg_box = self.query_one("#boot-msg", Static)
+        output = ""
+
+        try:
+            if key in COMMANDS:
+                result = COMMANDS[key]()
+
+                if result == "__clear__":
+                    msg_box.update("")
+                    event.input.value = ""
+                    return
+                else:
+                    output = f"[green]Aerith: {result}"
+            else:
+                output = f"[green]Aerith: Unknown command '{key}'"
+
+        except AttributeError:
+            output = f"[green]Aerith: Command '{key}' found, but is not callable."
+
+        except Exception as e:
+            output = f"[red]Aerith: Error while executing '{key}': {str(e)}"
+
+        msg_box.update(msg_box.renderable + f"\n{output}")
+        event.input.value = ""
